@@ -1,37 +1,57 @@
 [
     {
         "name": "ObjectA",
-        "coordinate":[
-            {"x":10, "y":10, "z":0}
+        "coordinate": [
+            {
+                "x": 25,
+                "y": 10,
+                "z": 0
+            }
         ],
-        "isGoal" : true
+        "isGoal": true
     },
     {
         "name": "ObjectB",
-        "coordinate":[
-            {"x":20, "y":20, "z":0}
+        "coordinate": [
+            {
+                "x": 20,
+                "y": 20,
+                "z": 0
+            }
         ],
-        "isGoal" : false
+        "isGoal": false
     },
     {
         "name": "ObjectC",
-        "coordinate":[
-            {"x":15, "y":30, "z":0}
+        "coordinate": [
+            {
+                "x": 15,
+                "y": 30,
+                "z": 0
+            }
         ],
-        "isGoal" : false
+        "isGoal": false
     },
     {
         "name": "ObjectD",
-        "coordinate":[
-            {"x":40, "y":30, "z":0}
+        "coordinate": [
+            {
+                "x": 40,
+                "y": 30,
+                "z": 0
+            }
         ],
-        "isGoal" : false
+        "isGoal": false
     },
     {
         "name": "ObjectE",
-        "coordinate":[
-            {"x":17, "y":30, "z":0}
+        "coordinate": [
+            {
+                "x": 17,
+                "y": 30,
+                "z": 0
+            }
         ],
-        "isGoal" : false
+        "isGoal": false
     }
 ]
