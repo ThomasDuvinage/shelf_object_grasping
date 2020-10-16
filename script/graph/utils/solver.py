@@ -74,6 +74,11 @@ class Solver(PlaceFinder):
         pass
 
     def __getObjectInBand(self, node):
+        """Le concept de cette methode est de creer une bande virtuelle sur l'axe des x en fonction d'un node donne + rayon d'accesibilite qui varie en fonction de la taille du bras. Cette methode retourne ensuite tous les nodes qui sont dans cette bande. 
+
+        Returns:
+            [list(Node)]: liste des nodes dans la bandes 
+        """
         objects = []
         for obj in self.__graph:
             if obj.x < node.x + self.objectRadiusProximity:

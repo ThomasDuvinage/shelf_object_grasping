@@ -13,6 +13,9 @@ class shelf_object_solver():
         self.goal = None
 
     def createEnv(self):
+        """
+            Cette methode permet de creer le graph en fonction des proprietes de chaque objet definies dans le fichier .json
+        """
         _, self.goal = self.solver.createGraph(self.graph)
 
         self.graph = self.solver.checkDirectConnectivity()
@@ -44,7 +47,11 @@ class shelf_object_solver():
         # print(objectToMove)
 
     def visualize(self):
-        # TODO add robot arm connectivity visualisation
+        """Cette fonction permet d'afficher le graph genere apres l'analyse de la position des objets et de leur accesibilite. 
+
+            TODO add robot arm connectivity visualisation
+        """
+
         x = []
         y = []
         s = []
@@ -71,7 +78,7 @@ class shelf_object_solver():
         plt.scatter(x, y, color="k", s=s, label="Objects")
         plt.legend()
 
-        plt.show()  # display
+        plt.show()
 
 
 if __name__ == "__main__":
