@@ -8,7 +8,8 @@
                 "z": 0
             }
         ],
-        "isGoal": true
+        "isGoal": true,
+        "size": 150
     },
     {
         "name": "ObjectB",
@@ -19,7 +20,8 @@
                 "z": 0
             }
         ],
-        "isGoal": false
+        "isGoal": false,
+        "size": 100
     },
     {
         "name": "ObjectC",
@@ -30,7 +32,8 @@
                 "z": 0
             }
         ],
-        "isGoal": false
+        "isGoal": false,
+        "size": 100
     },
     {
         "name": "ObjectD",
@@ -41,7 +44,8 @@
                 "z": 0
             }
         ],
-        "isGoal": false
+        "isGoal": false,
+        "size": 100
     },
     {
         "name": "ObjectE",
@@ -52,6 +56,7 @@
                 "z": 0
             }
         ],
-        "isGoal": false
+        "isGoal": false,
+        "size": 100
     }
 ]
