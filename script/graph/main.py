@@ -47,6 +47,7 @@ class shelf_object_solver():
         # TODO add robot arm connectivity visualisation
         x = []
         y = []
+        s = []
 
         plt.gca().invert_yaxis()  # reverse y axis
         ax = plt.axes()
@@ -54,6 +55,7 @@ class shelf_object_solver():
         for node in self.graph:
             x.append(node.x)
             y.append(node.y)
+            s.append(node.size)
 
             plt.annotate(node.name, (node.x, node.y))
 
@@ -66,7 +68,9 @@ class shelf_object_solver():
                 ax.arrow(node.x, node.y, self.goal.x - node.x,
                          self.goal.y - node.y, head_width=0.5, head_length=1, fc='r', ec='r')
 
-        plt.scatter(x, y, color="k")
+        plt.scatter(x, y, color="k", s=s, label="Objects")
+        plt.legend()
+
         plt.show()  # display
 
 
