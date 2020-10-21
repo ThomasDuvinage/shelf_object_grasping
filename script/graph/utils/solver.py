@@ -1,14 +1,36 @@
 from utils.PlaceFinder import *
+import numpy as np
 
 
 class Solver(PlaceFinder):
-    def __init__(self):
-        super().__init__()
-        self.__graph = []
+    def __init__(self, shelf_size_x, shelf_size_y, precision):
+        """ This class permits to find the right strategy to reach the goal object without touching any other object. 
 
+        Args:
+            shelf_size_x (int): x size of the shelf in mm
+            shelf_size_y (int): y size of the shelf in mm
+            precision (int): number of mm per pixel
+        """
+        self.__graph = []
         self.goal = None
 
         self.objectRadiusProximity = 5  # defined depending on the arm's size
+
+        self.precision = precision
+
+        # initialize a grid representing the shelf
+        self.__shelf = np.zeros(
+            (int(shelf_size_y/precision), int(shelf_size_x/precision)))
+
+        super().__init__(self.__shelf, precision)
+
+    def createShelfGrid(self):
+        """This method permits to create the shelf grid which will be used to determine a future pose for an object and check if an object is graspable or not to finish building the graf
+        """
+        for objects in self.__graph:
+            for i in range(int((objects.y / self.precision) - objects.size/self.precision), int(objects.size/self.precision)):
+                for u in range(int((objects.x / self.precision) - objects.size/self.precision), int(objects.size/self.precision)):
+                    self.__shelf[i][u] = 1
 
     def createGraph(self, node_array):
         """ Cette methode permet de generer le graph en fonction des objets dans l'espace 

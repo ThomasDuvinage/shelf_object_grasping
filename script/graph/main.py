@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 
 class shelf_object_solver():
-    def __init__(self):
+    def __init__(self, shelf_size_x, shelf_size_y, precision):
         self.dataParser = Data("script/graph/data/objects.json")
-        self.solver = Solver()
+        self.solver = Solver(shelf_size_x, shelf_size_y, precision)
 
         self.graph = []
         self.goal = None
@@ -23,6 +23,8 @@ class shelf_object_solver():
                                                                           30, 50, 0])
 
         print("INFO - Env description")
+
+        self.solver.createShelfGrid()
 
         for obj in self.graph:
             print(obj.__str__())
@@ -82,7 +84,7 @@ class shelf_object_solver():
 
 
 if __name__ == "__main__":
-    shelfdObjectSolver = shelf_object_solver()
+    shelfdObjectSolver = shelf_object_solver(1000, 500, 1)
 
     shelfdObjectSolver.getData()
 
