@@ -15,7 +15,7 @@
         "name": "ObjectB",
         "coordinate": [
             {
-                "x": 20,
+                "x": 25,
                 "y": 20,
                 "z": 0
             }
@@ -53,6 +53,30 @@
             {
                 "x": 17,
                 "y": 30,
+                "z": 0
+            }
+        ],
+        "isGoal": false,
+        "size": 100
+    },
+    {
+        "name": "ObjectF",
+        "coordinate": [
+            {
+                "x": 20,
+                "y": 20,
+                "z": 0
+            }
+        ],
+        "isGoal": false,
+        "size": 100
+    },
+    {
+        "name": "ObjectG",
+        "coordinate": [
+            {
+                "x": 17,
+                "y": 20,
                 "z": 0
             }
         ],
