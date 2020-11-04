@@ -1,10 +1,14 @@
 from utils.PlaceFinder import *
 import numpy as np
+import sys
+
+
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class Solver(PlaceFinder):
     def __init__(self, shelf_size_x, shelf_size_y, precision):
-        """ This class permits to find the right strategy to reach the goal object without touching any other object. 
+        """ This class permits to find the right strategy to reach the goal object without touching any other object.
 
         Args:
             shelf_size_x (int): x size of the shelf in mm
@@ -27,13 +31,27 @@ class Solver(PlaceFinder):
     def createShelfGrid(self):
         """This method permits to create the shelf grid which will be used to determine a future pose for an object and check if an object is graspable or not to finish building the graf
         """
+
         for objects in self.__graph:
-            for i in range(int((objects.y / self.precision) - objects.size/self.precision), int(objects.size/self.precision)):
-                for u in range(int((objects.x / self.precision) - objects.size/self.precision), int(objects.size/self.precision)):
+
+            y_sizeMin = int((objects.y / self.precision) -
+                            objects.size/(2 * self.precision))
+            y_sizeMax = int((objects.y / self.precision) +
+                            objects.size/(2 * self.precision))
+
+            x_sizeMin = int((objects.x / self.precision) -
+                            objects.size/(2 * self.precision))
+            x_sizeMax = int((objects.x / self.precision) +
+                            objects.size/(2 * self.precision))
+
+            for i in range(y_sizeMin, y_sizeMax):
+                for u in range(x_sizeMin, x_sizeMax):
                     self.__shelf[i][u] = 1
 
+            print(self.__shelf)
+
     def createGraph(self, node_array):
-        """ Cette methode permet de generer le graph en fonction des objets dans l'espace 
+        """ Cette methode permet de generer le graph en fonction des objets dans l'espace
 
         Un noeud ne peut avoir qu'un fils par contre il peut avoir plusieurs parents.
         """
@@ -51,9 +69,9 @@ class Solver(PlaceFinder):
         return self.__graph, self.goal
 
     def checkRobotArmGoalConnectivity(self, robotArmPose):
-        """INFO : Cette fonction va changer car on recuperera la position du bras grace a ros 
+        """INFO : Cette fonction va changer car on recuperera la position du bras grace a ros
 
-        TODO add shelf boundary size 
+        TODO add shelf boundary size
         TODO update !!
 
         Args:
@@ -96,10 +114,10 @@ class Solver(PlaceFinder):
         pass
 
     def __getObjectInBand(self, node):
-        """Le concept de cette methode est de creer une bande virtuelle sur l'axe des x en fonction d'un node donne + rayon d'accesibilite qui varie en fonction de la taille du bras. Cette methode retourne ensuite tous les nodes qui sont dans cette bande. 
+        """Le concept de cette methode est de creer une bande virtuelle sur l'axe des x en fonction d'un node donne + rayon d'accesibilite qui varie en fonction de la taille du bras. Cette methode retourne ensuite tous les nodes qui sont dans cette bande.
 
         Returns:
-            [list(Node)]: liste des nodes dans la bandes 
+            [list(Node)]: liste des nodes dans la bandes
         """
         objects = []
         for obj in self.__graph:
