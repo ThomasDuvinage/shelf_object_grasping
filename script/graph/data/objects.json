@@ -3,32 +3,32 @@
         "name": "ObjectA",
         "coordinate": [
             {
-                "x": 25,
+                "x": 40,
                 "y": 10,
                 "z": 0
             }
         ],
         "isGoal": true,
-        "size": 150
+        "size": 70
     },
     {
         "name": "ObjectB",
         "coordinate": [
             {
-                "x": 25,
-                "y": 20,
+                "x": 10,
+                "y": 40,
                 "z": 0
             }
         ],
         "isGoal": false,
-        "size": 100
+        "size": 50
     },
     {
         "name": "ObjectC",
         "coordinate": [
             {
                 "x": 15,
-                "y": 30,
+                "y": 60,
                 "z": 0
             }
         ],
@@ -39,25 +39,25 @@
         "name": "ObjectD",
         "coordinate": [
             {
-                "x": 40,
+                "x": 80,
                 "y": 30,
                 "z": 0
             }
         ],
         "isGoal": false,
-        "size": 100
+        "size": 80
     },
     {
         "name": "ObjectE",
         "coordinate": [
             {
-                "x": 17,
-                "y": 30,
+                "x": 60,
+                "y": 70,
                 "z": 0
             }
         ],
         "isGoal": false,
-        "size": 100
+        "size": 20
     },
     {
         "name": "ObjectF",
@@ -69,18 +69,6 @@
             }
         ],
         "isGoal": false,
-        "size": 100
-    },
-    {
-        "name": "ObjectG",
-        "coordinate": [
-            {
-                "x": 17,
-                "y": 20,
-                "z": 0
-            }
-        ],
-        "isGoal": false,
-        "size": 100
+        "size": 30
     }
 ]
