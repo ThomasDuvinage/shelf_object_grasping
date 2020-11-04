@@ -3,14 +3,18 @@ from utils.solver import *
 
 import matplotlib.pyplot as plt
 
+import logging as LOGGER
+
 
 class shelf_object_solver():
-    def __init__(self, shelf_size_x, shelf_size_y, precision):
+    def __init__(self, shelf_size_x, shelf_size_y, precision, verbose=True):
         self.dataParser = Data("script/graph/data/objects.json")
         self.solver = Solver(shelf_size_x, shelf_size_y, precision)
 
         self.graph = []
         self.goal = None
+
+        self.__verbose = verbose
 
     def createEnv(self):
         """
@@ -22,12 +26,13 @@ class shelf_object_solver():
         self.graph, self.goal = self.solver.checkRobotArmGoalConnectivity([
                                                                           30, 50, 0])
 
-        print("INFO - Env description")
+        LOGGER.info("Env description")
 
         self.solver.createShelfGrid()
 
-        for obj in self.graph:
-            print(obj.__str__())
+        if self.__verbose:
+            for obj in self.graph:
+                print(obj.__str__())
 
     def __solve(self):
         return self.solver.defineObjectToMove()
@@ -38,14 +43,15 @@ class shelf_object_solver():
 
         self.graph = self.dataParser.parseFile()
 
-        print("INFO - Data Imported")
+        LOGGER.info("Data Imported")
 
     def sendData(self):
         """send data via rosservice"""
 
         objectToMove = self.__solve()
 
-        print("INFO - Data to send")
+        LOGGER.info("Data to send")
+
         # print(objectToMove)
 
     def visualize(self):
@@ -84,7 +90,7 @@ class shelf_object_solver():
 
 
 if __name__ == "__main__":
-    shelfdObjectSolver = shelf_object_solver(1000, 500, 1)
+    shelfdObjectSolver = shelf_object_solver(100, 100, 1, verbose=False)
 
     shelfdObjectSolver.getData()
 
