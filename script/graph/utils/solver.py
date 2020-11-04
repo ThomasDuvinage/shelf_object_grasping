@@ -1,4 +1,5 @@
 from utils.PlaceFinder import *
+from utils.RobotArm import *
 import numpy as np
 import sys
 
@@ -18,37 +19,11 @@ class Solver(PlaceFinder):
         self.__graph = []
         self.goal = None
 
-        self.objectRadiusProximity = 5  # defined depending on the arm's size
+        self.objectRadiusProximity = 70  # defined depending on the arm's size
 
         self.precision = precision
 
-        # initialize a grid representing the shelf
-        self.__shelf = np.zeros(
-            (int(shelf_size_y/precision), int(shelf_size_x/precision)))
-
-        super().__init__(self.__shelf, precision)
-
-    def createShelfGrid(self):
-        """This method permits to create the shelf grid which will be used to determine a future pose for an object and check if an object is graspable or not to finish building the graf
-        """
-
-        for objects in self.__graph:
-
-            y_sizeMin = int((objects.y / self.precision) -
-                            objects.size/(2 * self.precision))
-            y_sizeMax = int((objects.y / self.precision) +
-                            objects.size/(2 * self.precision))
-
-            x_sizeMin = int((objects.x / self.precision) -
-                            objects.size/(2 * self.precision))
-            x_sizeMax = int((objects.x / self.precision) +
-                            objects.size/(2 * self.precision))
-
-            for i in range(y_sizeMin, y_sizeMax):
-                for u in range(x_sizeMin, x_sizeMax):
-                    self.__shelf[i][u] = 1
-
-            print(self.__shelf)
+        super().__init__(shelf_size_x, shelf_size_y, precision)
 
     def createGraph(self, node_array):
         """ Cette methode permet de generer le graph en fonction des objets dans l'espace
@@ -57,7 +32,7 @@ class Solver(PlaceFinder):
         """
         for node in node_array:
             if not node.isGoal():
-                child = node.getClosestNode(node_array)
+                child, _ = node.getClosestNode(node_array)
 
                 child.setParent(node)
                 node.setChild(child)
@@ -66,45 +41,28 @@ class Solver(PlaceFinder):
 
         self.__graph = node_array
 
-        return self.__graph, self.goal
+        return self.goal
 
-    def checkRobotArmGoalConnectivity(self, robotArmPose):
+    def checkDirectConnectivity(self, robotArm=None):
         """INFO : Cette fonction va changer car on recuperera la position du bras grace a ros
 
-        TODO add shelf boundary size
-        TODO update !!
-
         Args:
-            robotArmPose ([x,y,z]): robot arm pose in the env
+            robotArm (Object): robot arm object
         """
-        for node in self.__graph:
-            objects_array = self.__getObjectInBand(node)
 
-            if objects_array:
-                close_node = self.__getClosestObjectsFromRobotArm(
-                    objects_array, robotArmPose)
-
-                if close_node.isAccessible(self.objectRadiusProximity):
+        if robotArm:
+            print("robot arm check")
+            for node in self.__graph:
+                if not self.__isCollide(robotArm, node):
                     node.setRobotArmAccessibility()
 
-        return self.__graph, self.goal
-
-    def checkDirectConnectivity(self):
-        """Cette fonction permet de verifier si un node est peut etre relie directement au node goal
-
-        TODO update !!
-        """
-
-        for node in self.__graph:
-            if not node.isGoal():
-                objects_array = self.__getObjectInBand(node)
-
-                if objects_array:
-                    close_node = self.__getClosestObjectsFromNode(
-                        objects_array)
-
-                    if close_node.isAccessible(self.objectRadiusProximity):
+        else:
+            print("direct check")
+            for node in self.__graph:
+                if not node.isGoal():
+                    if not self.__isCollide(self.goal, node):
                         node.setDirectTrajecory()
+
         return self.__graph
 
     def defineObjectToMove(self):
@@ -113,38 +71,63 @@ class Solver(PlaceFinder):
         """
         pass
 
-    def __getObjectInBand(self, node):
-        """Le concept de cette methode est de creer une bande virtuelle sur l'axe des x en fonction d'un node donne + rayon d'accesibilite qui varie en fonction de la taille du bras. Cette methode retourne ensuite tous les nodes qui sont dans cette bande.
+    def __getDistanceToClosestObjectsFromPoint(self, point):
+        closest_node = None
+        min_dist = 100000
 
-        Returns:
-            [list(Node)]: liste des nodes dans la bandes
-        """
-        objects = []
         for obj in self.__graph:
-            if obj.x < node.x + self.objectRadiusProximity:
-                if obj.x > node.x - self.objectRadiusProximity:
-                    objects.append(obj)
-        return objects
+            if(min_dist > (obj.getDistanceTo(point) + obj.size/2)):
+                closest_node = obj
+                min_dist = obj.getDistanceTo(point) + obj.size/2
 
-    def __getClosestObjectsFromRobotArm(self, array, robotArmPose):
-        closest_node = None
-        min_dist = 100000
+        return closest_node, min_dist
 
-        for node in array:
-            if(min_dist > node.getDistanceTo(robotArmPose)):
-                closest_node = node
-                min_dist = node.getDistanceTo(robotArmPose)
+    def __isCollide(self, starting_node, ending_node):
+        """ This method is based on the Bresenham algorithm
 
-        return closest_node
+            This algorithm is well known for drawing lines between two points in a grid.
 
-    def __getClosestObjectsFromNode(self, array):
-        closest_node = None
-        min_dist = 100000
+            In our case, we use this algorithm to link two poses with a line and for each cell of this line, we check if the arm can pass without touching any other object.
+        Args:
+            starting_node (Node or RobotArm):
+            ending_node (Node):
+        """
 
-        for obj in array:
-            if not obj.isGoal():
-                if(min_dist > self.goal.getDistanceToNode(obj)):
-                    closest_node = obj
-                    min_dist = self.goal.getDistanceToNode(obj)
+        sx, sy, dx, dy = 0, 0, 0, 0
 
-        return closest_node
+        x, y = starting_node.x, starting_node.y
+
+        if(x < ending_node.x):
+            sx = 1
+        else:
+            sx = -1
+
+        if(y < ending_node.y):
+            sy = 1
+        else:
+            sy = -1
+
+        dx = abs(x - ending_node.x)
+        dy = abs(y - ending_node.y)
+        e = dx - dy
+
+        while(x != ending_node.x or y != ending_node.y):
+            e2 = e * 2
+
+            if e2 > - dy:
+                e -= dy
+                x += sx
+
+            if e2 < dx:
+                e += dx
+                y += sy
+
+            if(x != ending_node.x or y != ending_node.y):
+                node, distanceToClosestNode = self.__getDistanceToClosestObjectsFromPoint([
+                    x, y, 0])
+
+                if node is not ending_node and node is not starting_node:
+                    if distanceToClosestNode < self.objectRadiusProximity:
+                        return True
+
+        return False

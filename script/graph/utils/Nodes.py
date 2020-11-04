@@ -13,6 +13,7 @@ class Node():
             child ([type = Node], optional): [child of the object see method for more]. Defaults to None.
             parent ([type = list(Node)], optional): [list of node referenced as parent of the actual node]. Defaults to None.
         """
+
         self.x, self.y, self.z = coordinate[0]['x'], coordinate[0]['y'], coordinate[0]['z']
         self.name = name
         self.size = size
@@ -34,10 +35,7 @@ class Node():
         Returns:
             [boolean]: True if directly accessible
         """
-        if self.__robotArmAccessible:
-            return True
-
-        return False
+        return self.__robotArmAccessible
 
     def setRobotArmAccessibility(self):
         """Update robot arm accessibility 
@@ -84,17 +82,7 @@ class Node():
                     closest_node = node
                     min_dist = self.getDistanceToNode(node)
 
-        return closest_node
-
-    def isAccessible(self, radius):
-        for parent in self.__parent:
-            if self.getDistanceToNode(parent) + parent.size / 2 < radius:
-                return False
-
-        if self.__child and self.getDistanceToNode(self.__child) + self.__child.size / 2 < radius:
-            return False
-
-        return True
+        return closest_node, min_dist
 
     def __str__(self):
         """Equivalent of toString(). it permits to display all the info concerning the node

@@ -2,14 +2,15 @@ class PlaceFinder():
     """The goal of this class is to find the right place to move an object with a given size
     """
 
-    def __init__(self, _shelf, precision):
-        """ This class permits to find the best place for an objet. This function is used after finding objects that need to be moved to access the goal object. 
+    def __init__(self, x_boundary, y_boundary, precision):
+        """This class permits to find the best place for an objet. This function is used after    finding objects that need to be moved to access the goal object. 
+
 
         Args:
-            _shelf (numpy array): reference of the np array represented the shelf grid created in the Solver constructor
-            precision (int): precision of the grid (mm per pixel)
+            x_boundary ([type]): [description]
+            y_boundary ([type]): [description]
+            precision ([type]): [description]
         """
-        self.shelf = _shelf
 
     def findPlaceForObject(self, obj):
         """L'objectif de cette fonction est de trouver la bonne place pour un objet dans l'etagere. 
