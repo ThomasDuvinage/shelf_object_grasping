@@ -2,7 +2,7 @@ from math import sqrt, pow
 
 
 class Node():
-    def __init__(self, name='', coordinate=[], isGoal=False, size=0, child=None, parent=None):
+    def __init__(self, name='', coordinate=[], isGoal=False, size=0):
         """This class is used to represent a node. A node is an object on the shelf. Nodes are created when parsing json file. 
 
         Args:
@@ -18,16 +18,10 @@ class Node():
         self.name = name
         self.size = size
 
-        self.__child = child
-
-        if not parent:
-            self.__parent = []
-        else:
-            self.__parent = parent
+        self.__child = []
+        self.__parent = []
 
         self.__isGoal = isGoal
-        self.__directTractory = False
-        self.__robotArmAccessible = False
 
     def isRobotArmAccessible(self):
         """This method permits to know if the Node (object) is accessible to the robot arm. Which means the robot arm can grasp it without touching any object around 
@@ -43,7 +37,7 @@ class Node():
         self.__robotArmAccessible = True
 
     def setChild(self, nodeChild):
-        self.__child = nodeChild
+        self.__child.append(nodeChild)
 
     def getChild(self):
         return self.__child
@@ -60,29 +54,36 @@ class Node():
     def isGoal(self):
         return self.__isGoal
 
-    def setDirectTrajecory(self):
-        self.__directTractory = True
-
-    def isDirectTrajectory(self):
-        return self.__directTractory
-
     def getDistanceTo(self, datapoint):
         return sqrt(pow((datapoint[0]-self.x), 2) + pow((datapoint[1]-self.y), 2) + pow((datapoint[2]-self.z), 2))
 
     def getDistanceToNode(self, node):
         return sqrt(pow((node.x-self.x), 2) + pow((node.y-self.y), 2) + pow((node.z-self.z), 2))
 
-    def getClosestNode(self, array):
-        closest_node = None
-        min_dist = 100000
+    def getBestParentNode(self, array, robotArm):
+        closest_best_node = None
+        best_min_dist = 100000
+
+        second_best_node = None
+        second_min_dist = 100000
 
         for node in array:
-            if node is not self and not node.isGoal():
-                if(min_dist > self.getDistanceToNode(node)):
-                    closest_node = node
-                    min_dist = self.getDistanceToNode(node)
+            if node.name != "RobotArm":
+                if(best_min_dist > self.getDistanceToNode(node)):
+                    if robotArm in node.getParent():
+                        closest_best_node = node
+                        best_min_dist = self.getDistanceToNode(node)
 
-        return closest_node, min_dist
+                if(second_min_dist > self.getDistanceToNode(node)):
+                    second_best_node = node
+                    second_min_dist = self.getDistanceToNode(node)
+            else:
+                return node, best_min_dist
+
+        if closest_best_node:
+            return closest_best_node, best_min_dist
+        else:
+            return second_best_node, second_min_dist
 
     def __str__(self):
         """Equivalent of toString(). it permits to display all the info concerning the node
@@ -90,20 +91,18 @@ class Node():
         rep = "Object :\n"
         rep += "    name: " + self.name + "\n"
         rep += "    size: " + str(self.size) + "\n"
-        rep += "    isdirectTraj: " + str(self.__directTractory) + "\n"
-        rep += "    isRobotAccessible: " + \
-            str(self.__robotArmAccessible) + "\n"
 
         rep += "    isGoal: " + str(self.__isGoal) + "\n\n"
-        if(self.__child):
-            rep += "    child: " + self.__child.name + "\n"
-        else:
-            rep += "    child: " + str(self.__child) + "\n"
+        # if(self.__child):
+        #     for child in self.__child:
+        #         rep += "    child: " + child.name + "\n"
+        # else:
+        #     rep += "    child: " + str(self.__child) + "\n"
 
-        if(self.__parent):
-            for parent in self.__parent:
-                rep += "    parent: " + parent.name + "\n"
-        else:
-            rep += "    parent: " + str(self.__parent) + "\n"
+        # if(self.__parent):
+        #     for parent in self.__parent:
+        #         rep += "    parent: " + parent.name + "\n"
+        # else:
+        #     rep += "    parent: " + str(self.__parent) + "\n"
 
         return rep

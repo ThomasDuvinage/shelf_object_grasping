@@ -3,12 +3,15 @@ from utils.RobotArm import *
 import numpy as np
 import sys
 
+"""
+TODO :
+    - define mecanical constraints 
 
-np.set_printoptions(threshold=sys.maxsize)
+"""
 
 
 class Solver(PlaceFinder):
-    def __init__(self, shelf_size_x, shelf_size_y, precision):
+    def __init__(self, shelf_size_x, shelf_size_y, precision, graph, goal):
         """ This class permits to find the right strategy to reach the goal object without touching any other object.
 
         Args:
@@ -16,60 +19,122 @@ class Solver(PlaceFinder):
             shelf_size_y (int): y size of the shelf in mm
             precision (int): number of mm per pixel
         """
-        self.__graph = []
-        self.goal = None
+        self.__graph = graph
+        self.goal = goal
 
-        self.objectRadiusProximity = 70  # defined depending on the arm's size
+        self.objectRadiusProximity = 80  # defined depending on the arm's size
 
         self.precision = precision
 
         super().__init__(shelf_size_x, shelf_size_y, precision)
 
-    def createGraph(self, node_array):
+    def __getSucessors(self, currentNode):
         """ Cette methode permet de generer le graph en fonction des objets dans l'espace
 
         Un noeud ne peut avoir qu'un fils par contre il peut avoir plusieurs parents.
         """
-        for node in node_array:
-            if not node.isGoal():
-                child, _ = node.getClosestNode(node_array)
+        child = []
 
-                child.setParent(node)
-                node.setChild(child)
-            else:
-                self.goal = node
+        for node in self.__graph:
+            if node is not currentNode:
+                if not self.__isCollide(currentNode, node):
+                    child.append(node)
+                    currentNode.setChild(node)
+                    node.setParent(currentNode)
 
-        self.__graph = node_array
+        return child
 
-        return self.goal
-
-    def checkDirectConnectivity(self, robotArm=None):
-        """INFO : Cette fonction va changer car on recuperera la position du bras grace a ros
-
-        Args:
-            robotArm (Object): robot arm object
-        """
-
-        if robotArm:
-            print("robot arm check")
-            for node in self.__graph:
-                if not self.__isCollide(robotArm, node):
-                    node.setRobotArmAccessibility()
-
-        else:
-            print("direct check")
-            for node in self.__graph:
-                if not node.isGoal():
-                    if not self.__isCollide(self.goal, node):
-                        node.setDirectTrajecory()
-
-        return self.__graph
-
-    def defineObjectToMove(self):
+    def defineObjectToMove(self, robotArm, algo_name, occurence_test=True):
         """Cette methode definit la liste des objets a bouger pour atteindre l'object goal.
             En verifiant auparavant si l'objet goal ne peut pas etre atteint directement.
         """
-        pass
+
+        objectsToMove = []
+
+        solution = None
+        nb_iterations = 0
+
+        if algo_name == "BFS":
+            solution, nb_iterations = self.breath_first_search(
+                robotArm, occurence_test=occurence_test)
+        elif algo_name == "DFS":
+            solution, nb_iterations = self.depth_first_search(
+                robotArm, occurence_test=occurence_test)
+
+        if solution:
+            print("Solver : Solution found")
+
+        if nb_iterations == 1:
+            objectsToMove.append(robotArm)
+            objectsToMove.append(solution)
+        else:
+            objectsToMove.append(solution)
+            parentArray = solution.getParent()
+
+            while parentArray:
+                solution, _ = solution.getBestParentNode(parentArray, robotArm)
+                objectsToMove.append(solution)
+
+                if solution.getParent():
+                    parentArray = solution.getParent()
+                else:
+                    parentArray = None
+
+            objectsToMove.reverse()
+
+        return objectsToMove, nb_iterations
+
+    def breath_first_search(self, robotArm, occurence_test=True):
+        frontier = list()
+        explored = []
+        frontier.append(robotArm)
+
+        i = 0
+
+        while frontier:
+            state = frontier.pop(0)
+
+            if state == self.goal:
+                return state, i
+
+            children = self.__getSucessors(state)
+
+            for child in children:
+                if not occurence_test or (child not in explored):
+                    frontier.append(child)
+                    if occurence_test:
+                        explored.append(child)
+
+            i += 1
+
+        return None
+
+    def depth_first_search(self, robotArm, occurence_test=True):
+        frontier = list()
+        explored = []
+        frontier.append(robotArm)
+
+        i = 0
+
+        while frontier:
+            state = frontier.pop()
+
+            explored.append(state)
+
+            if state == self.goal:
+                return state, i
+
+            children = self.__getSucessors(state)
+
+            for child in children:
+                if not occurence_test or (child not in explored):
+                    frontier.insert(0, child)
+                    if occurence_test:
+                        explored.append(child)
+
+                i += 1
+
+        return None
 
     def __getDistanceToClosestObjectsFromPoint(self, point):
         closest_node = None
