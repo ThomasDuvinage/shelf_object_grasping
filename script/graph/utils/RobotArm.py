@@ -6,6 +6,7 @@ class RobotArm():
 
         self.__child = []
         self.__parent = None
+        self.size = 100
 
     def setChild(self, nodeChild):
         self.__child.append(nodeChild)

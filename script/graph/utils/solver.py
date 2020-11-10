@@ -6,7 +6,7 @@ import sys
 """
 TODO :
     - define mecanical constraints 
-
+    - find a better way to generate the path
 """
 
 
@@ -22,7 +22,7 @@ class Solver(PlaceFinder):
         self.__graph = graph
         self.goal = goal
 
-        self.objectRadiusProximity = 80  # defined depending on the arm's size
+        self.objectRadiusProximity = 150  # defined depending on the arm's size
 
         self.precision = precision
 

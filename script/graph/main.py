@@ -17,7 +17,7 @@ class shelf_object_solver():
 
         self.graph = []
 
-        self.getData(randomInit=randomENV, objectNumber=25)
+        self.getData(randomInit=randomENV, objectNumber=10)
         self.goal = self.__getGoal()
 
         self.solver = Solver(shelf_size_x, shelf_size_y,
@@ -29,7 +29,7 @@ class shelf_object_solver():
         self.__verbose = verbose
 
     def __solve(self):
-        return self.solver.defineObjectToMove(self.__grasper, "BFS", occurence_test=True)
+        return self.solver.defineObjectToMove(self.__grasper, "DFS", occurence_test=True)
 
     def __getGoal(self):
         for obj in self.graph:
@@ -81,30 +81,41 @@ class shelf_object_solver():
         print("Solve in ", iterations, "iterations")
         print(nb_objects_move, "have to be moved to reach goal Object")
 
-    def visualize(self):
+        return objectsToMove
+
+    def visualize(self, solution=None):
         """Cette fonction permet d'afficher le graph genere apres l'analyse de la position des objets et de leur accesibilite.
 
             TODO add robot arm connectivity visualisation
         """
 
-        x = []
-        y = []
-        s = []
+        x_graph = []
+        y_graph = []
+        s_graph = []
 
-        fig, (ax1) = plt.subplots(1, 1, constrained_layout=True)
+        x_solution = []
+        y_solution = []
+        s_solution = []
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, constrained_layout=True)
         fig.suptitle("Links between Nodes and robot arm")
 
         ax1.set_xlim([0, self.x_boundary])
         ax1.set_ylim([0, self.y_boundary])
 
+        ax2.set_xlim([0, self.x_boundary])
+        ax2.set_ylim([0, self.y_boundary])
+
         ax1.invert_yaxis()  # reverse y axis
+        ax2.invert_yaxis()
 
         ax1.set_title("Nodes connections")
+        ax2.set_title("Solution")
 
         for node in self.graph:
-            x.append(node.x)
-            y.append(node.y)
-            s.append(node.size)
+            x_graph.append(node.x)
+            y_graph.append(node.y)
+            s_graph.append(node.size)
 
             ax1.annotate(node.name, (node.x, node.y))
 
@@ -113,7 +124,23 @@ class shelf_object_solver():
                     ax1.arrow(parent.x, parent.y, node.x - parent.x,
                               node.y - parent.y, head_width=0.1, head_length=1, fc='b', ec='b')
 
-        ax1.scatter(x, y, color="k", s=node.size*2, label="Objects")
+        if solution:
+            for node in solution:
+                ax2.annotate(node.name, (node.x, node.y))
+
+                x_solution.append(node.x)
+                y_solution.append(node.y)
+                s_solution.append(node.size)
+
+            for i in range(len(solution) - 1):
+                ax2.arrow(solution[i].x, solution[i].y, solution[i+1].x - solution[i].x,
+                          solution[i+1].y - solution[i].y, head_width=0.1, head_length=1, fc='b', ec='b')
+
+        ax1.scatter(x_graph, y_graph, color="k",
+                    s=node.size*2, label="Objects")
+        ax2.scatter(x_solution, y_solution, color="k",
+                    s=node.size*2)
+
         fig.legend()
 
         plt.show()
@@ -121,8 +148,8 @@ class shelf_object_solver():
 
 if __name__ == "__main__":
     shelfdObjectSolver = shelf_object_solver(
-        800, 400, 1, randomENV=True, verbose=False)
+        2000, 700, 1, randomENV=True, verbose=False)
 
-    shelfdObjectSolver.sendData()
+    solution = shelfdObjectSolver.sendData()
 
-    shelfdObjectSolver.visualize()
+    shelfdObjectSolver.visualize(solution=solution)
