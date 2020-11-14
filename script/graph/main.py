@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import logging as LOGGER
 from random import randint
+from math import inf
 
 
 class shelf_object_solver():
@@ -24,13 +25,36 @@ class shelf_object_solver():
                              precision, self.graph, self.goal)
 
         # Warning may not be true
-        self.__grasper = RobotArm(shelf_size_x / 2, shelf_size_y)
+        self.__grasper = RobotArm(0, shelf_size_y)
 
         self.__verbose = verbose
 
     def __solve(self):
+        nb_interval = 10
+        interval_dist = self.x_boundary / nb_interval
 
-        return self.solver.defineObjectToMove(self.__grasper, "BFS", occurence_test=True)
+        array_objectToMove = []
+
+        for i in range(nb_interval):
+            self.solver.resetNodesChild()
+            self.__grasper.x += interval_dist
+            objectToMove, iterations = self.solver.defineObjectToMove(
+                self.__grasper, "BFS", occurence_test=True)
+
+            array_objectToMove.append(
+                [self.__grasper.x, len(objectToMove), objectToMove, iterations])
+
+        print(array_objectToMove)
+        min_object_toMove = inf
+        best_solution = []
+
+        for i in range(nb_interval):
+            if array_objectToMove[i][1] < min_object_toMove:
+                best_solution = array_objectToMove[i]
+                self.__grasper.x = array_objectToMove[i][0]
+                min_object_toMove = array_objectToMove[i][1]
+
+        return best_solution[-2], best_solution[-1]
 
     def __getGoal(self):
         for obj in self.graph:
@@ -87,9 +111,7 @@ class shelf_object_solver():
     def visualize(self, solution=None):
         """Cette fonction permet d'afficher le graph genere apres l'analyse de la position des objets et de leur accesibilite.
 
-            TODO add robot arm connectivity visualisation
         """
-
         x_graph = []
         y_graph = []
         s_graph = []
