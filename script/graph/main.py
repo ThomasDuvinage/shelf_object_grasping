@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import logging as LOGGER
 from random import randint
 from math import inf
+import time
 
 
 class shelf_object_solver():
@@ -18,7 +19,7 @@ class shelf_object_solver():
 
         self.graph = []
 
-        self.getData(randomInit=randomENV, objectNumber=10)
+        self.getData(randomInit=randomENV, objectNumber=15)
         self.goal = self.__getGoal()
 
         self.solver = Solver(shelf_size_x, shelf_size_y,
@@ -30,7 +31,9 @@ class shelf_object_solver():
         self.__verbose = verbose
 
     def __solve(self):
-        nb_interval = 10
+        start_execution_time = time.time()
+
+        nb_interval = 20
         interval_dist = self.x_boundary / nb_interval
 
         array_objectToMove = []
@@ -41,20 +44,24 @@ class shelf_object_solver():
             objectToMove, iterations = self.solver.defineObjectToMove(
                 self.__grasper, "BFS", occurence_test=True)
 
-            array_objectToMove.append(
-                [self.__grasper.x, len(objectToMove), objectToMove, iterations])
+            if len(objectToMove) != 2:
+                array_objectToMove.append(
+                    [self.__grasper.x, len(objectToMove), objectToMove, iterations])
 
-        print(array_objectToMove)
-        min_object_toMove = inf
-        best_solution = []
+                if array_objectToMove[-1][1] < array_objectToMove[0][1] and i > 0:
+                    array_objectToMove.pop(0)
+                elif i > 0:
+                    array_objectToMove.pop(-1)
+            else:
+                array_objectToMove = [[self.__grasper.x, len(
+                    objectToMove), objectToMove, iterations]]
+                break
 
-        for i in range(nb_interval):
-            if array_objectToMove[i][1] < min_object_toMove:
-                best_solution = array_objectToMove[i]
-                self.__grasper.x = array_objectToMove[i][0]
-                min_object_toMove = array_objectToMove[i][1]
+        self.__grasper.x = array_objectToMove[0][0]
 
-        return best_solution[-2], best_solution[-1]
+        exec_time = time.time() - start_execution_time
+
+        return array_objectToMove[0][-2], array_objectToMove[0][-1], exec_time
 
     def __getGoal(self):
         for obj in self.graph:
@@ -93,7 +100,7 @@ class shelf_object_solver():
     def sendData(self):
         """send data via rosservice"""
 
-        objectsToMove, iterations = self.__solve()
+        objectsToMove, iterations, exec_time = self.__solve()
 
         LOGGER.info("Data to send")
 
@@ -105,6 +112,7 @@ class shelf_object_solver():
 
         print("Solve in ", iterations, "iterations")
         print(nb_objects_move, "have to be moved to reach goal Object")
+        print("Exectution time : ", exec_time, " seconds")
 
         return objectsToMove
 

@@ -1,6 +1,7 @@
 from utils.PlaceFinder import *
 from utils.RobotArm import *
 from utils.Nodes import *
+from utils.AStar import *
 import numpy as np
 import sys
 
@@ -13,7 +14,7 @@ TODO :
 """
 
 
-class Solver(PlaceFinder):
+class Solver(PlaceFinder, AStar):
     def __init__(self, shelf_size_x, shelf_size_y, precision, graph, goal):
         """ This class permits to find the right strategy to reach the goal object without touching any other object.
 
@@ -192,3 +193,8 @@ class Solver(PlaceFinder):
                         return True
 
         return False
+
+    def resetNodesChild(self):
+        for node in self.__graph:
+            node.resetChild()
+            node.resetParent()
