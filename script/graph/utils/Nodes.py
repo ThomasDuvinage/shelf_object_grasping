@@ -1,7 +1,9 @@
 from math import sqrt, pow
+import copy as cp
 
 
 class Node():
+
     def __init__(self, name='', coordinate=[], isGoal=False, size=0):
         """This class is used to represent a node. A node is an object on the shelf. Nodes are created when parsing json file. 
 
@@ -19,7 +21,7 @@ class Node():
         self.size = size
 
         self.__child = []
-        self.__parent = []
+        self.__parent = None
 
         self.__isGoal = isGoal
 
@@ -36,14 +38,20 @@ class Node():
         """
         self.__robotArmAccessible = True
 
+    def resetChild(self):
+        self.__child = []
+
     def setChild(self, nodeChild):
         self.__child.append(nodeChild)
 
     def getChild(self):
         return self.__child
 
+    def resetParent(self):
+        self.__parent = None
+
     def setParent(self, parentChild):
-        self.__parent.append(parentChild)
+        self.__parent = parentChild
 
     def getParent(self):
         return self.__parent
@@ -60,31 +68,6 @@ class Node():
     def getDistanceToNode(self, node):
         return sqrt(pow((node.x-self.x), 2) + pow((node.y-self.y), 2) + pow((node.z-self.z), 2))
 
-    def getBestParentNode(self, array, robotArm):
-        closest_best_node = None
-        best_min_dist = 100000
-
-        second_best_node = None
-        second_min_dist = 100000
-
-        for node in array:
-            if node.name != "RobotArm":
-                if(best_min_dist > self.getDistanceToNode(node)):
-                    if robotArm in node.getParent():
-                        closest_best_node = node
-                        best_min_dist = self.getDistanceToNode(node)
-
-                if(second_min_dist > self.getDistanceToNode(node)):
-                    second_best_node = node
-                    second_min_dist = self.getDistanceToNode(node)
-            else:
-                return node, best_min_dist
-
-        if closest_best_node:
-            return closest_best_node, best_min_dist
-        else:
-            return second_best_node, second_min_dist
-
     def __str__(self):
         """Equivalent of toString(). it permits to display all the info concerning the node
         """
@@ -93,16 +76,15 @@ class Node():
         rep += "    size: " + str(self.size) + "\n"
 
         rep += "    isGoal: " + str(self.__isGoal) + "\n\n"
-        # if(self.__child):
-        #     for child in self.__child:
-        #         rep += "    child: " + child.name + "\n"
-        # else:
-        #     rep += "    child: " + str(self.__child) + "\n"
+        if(self.__child):
+            for child in self.__child:
+                rep += "    child: " + child.name + "\n"
+        else:
+            rep += "    child: " + str(self.__child) + "\n"
 
-        # if(self.__parent):
-        #     for parent in self.__parent:
-        #         rep += "    parent: " + parent.name + "\n"
-        # else:
-        #     rep += "    parent: " + str(self.__parent) + "\n"
+        if(self.__parent):
+            rep += "    parent: " + self.__parent.name + "\n"
+        else:
+            rep += "    parent: " + str(self.__parent) + "\n"
 
         return rep

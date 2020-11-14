@@ -1,11 +1,14 @@
 from utils.PlaceFinder import *
 from utils.RobotArm import *
+from utils.Nodes import *
 import numpy as np
 import sys
 
+import copy as cp
+
 """
 TODO :
-    - define mecanical constraints 
+    - define mecanical constraints
     - find a better way to generate the path
 """
 
@@ -33,16 +36,17 @@ class Solver(PlaceFinder):
 
         Un noeud ne peut avoir qu'un fils par contre il peut avoir plusieurs parents.
         """
-        child = []
 
         for node in self.__graph:
-            if node is not currentNode:
+            if node.name is not currentNode.name:
                 if not self.__isCollide(currentNode, node):
-                    child.append(node)
-                    currentNode.setChild(node)
-                    node.setParent(currentNode)
+                    new_node = cp.deepcopy(node)
+                    new_node.resetChild()
 
-        return child
+                    currentNode.setChild(new_node)
+                    new_node.setParent(currentNode)
+
+        return currentNode.getChild()
 
     def defineObjectToMove(self, robotArm, algo_name, occurence_test=True):
         """Cette methode definit la liste des objets a bouger pour atteindre l'object goal.
@@ -64,23 +68,15 @@ class Solver(PlaceFinder):
         if solution:
             print("Solver : Solution found")
 
-        if nb_iterations == 1:
-            objectsToMove.append(robotArm)
-            objectsToMove.append(solution)
-        else:
-            objectsToMove.append(solution)
-            parentArray = solution.getParent()
+        objectsToMove.append(solution)
+        parent = solution.getParent()
 
-            while parentArray:
-                solution, _ = solution.getBestParentNode(parentArray, robotArm)
-                objectsToMove.append(solution)
+        while parent:
+            objectsToMove.append(parent)
 
-                if solution.getParent():
-                    parentArray = solution.getParent()
-                else:
-                    parentArray = None
+            parent = parent.getParent()
 
-            objectsToMove.reverse()
+        objectsToMove.reverse()
 
         return objectsToMove, nb_iterations
 
@@ -94,16 +90,16 @@ class Solver(PlaceFinder):
         while frontier:
             state = frontier.pop(0)
 
-            if state == self.goal:
+            if state.isGoal():
                 return state, i
 
             children = self.__getSucessors(state)
 
             for child in children:
-                if not occurence_test or (child not in explored):
+                if not occurence_test or (child.name not in explored):
                     frontier.append(child)
                     if occurence_test:
-                        explored.append(child)
+                        explored.append(child.name)
 
             i += 1
 
@@ -127,10 +123,10 @@ class Solver(PlaceFinder):
             children = self.__getSucessors(state)
 
             for child in children:
-                if not occurence_test or (child not in explored):
+                if not occurence_test or (child.name not in explored.name):
                     frontier.insert(0, child)
                     if occurence_test:
-                        explored.append(child)
+                        explored.append(child.name)
 
                 i += 1
 
@@ -191,7 +187,7 @@ class Solver(PlaceFinder):
                 node, distanceToClosestNode = self.__getDistanceToClosestObjectsFromPoint([
                     x, y, 0])
 
-                if node is not ending_node and node is not starting_node:
+                if node.name is not ending_node.name and node.name is not starting_node.name:
                     if distanceToClosestNode < self.objectRadiusProximity:
                         return True
 

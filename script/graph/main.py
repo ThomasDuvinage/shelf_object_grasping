@@ -29,7 +29,8 @@ class shelf_object_solver():
         self.__verbose = verbose
 
     def __solve(self):
-        return self.solver.defineObjectToMove(self.__grasper, "DFS", occurence_test=True)
+
+        return self.solver.defineObjectToMove(self.__grasper, "BFS", occurence_test=True)
 
     def __getGoal(self):
         for obj in self.graph:
@@ -119,10 +120,10 @@ class shelf_object_solver():
 
             ax1.annotate(node.name, (node.x, node.y))
 
-            if node.getParent():
-                for parent in node.getParent():
-                    ax1.arrow(parent.x, parent.y, node.x - parent.x,
-                              node.y - parent.y, head_width=0.1, head_length=1, fc='b', ec='b')
+            if node.getChild():
+                for child in node.getChild():
+                    ax1.arrow(child.x, child.y, node.x - child.x,
+                              node.y - child.y, head_width=0.1, head_length=1, fc='b', ec='b')
 
         if solution:
             for node in solution:

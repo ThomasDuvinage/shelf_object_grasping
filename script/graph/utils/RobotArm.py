@@ -1,8 +1,8 @@
 class RobotArm():
-    def __init__(self, x, y, z=0):
+    def __init__(self, x, y, z=0, name=" "):
         self.x, self.y, self.z = x, y, z
 
-        self.name = "RobotArm"
+        self.name = "RobotArm - " + name
 
         self.__child = []
         self.__parent = None
@@ -16,6 +16,9 @@ class RobotArm():
 
     def getParent(self):
         return self.__parent
+
+    def isGoal(self):
+        return False
 
     def __str__(self):
         rep = "RobotArm :\n"
