@@ -1,12 +1,12 @@
+import numpy as np
+import sys
+import copy as cp
+from math import inf
+
 from solver.PlaceFinder import *
 from utils.RobotArm import *
 from utils.Nodes import *
 from utils.FreeZone import *
-import numpy as np
-import sys
-
-import copy as cp
-
 """
 TODO :
     - define mecanical constraints
@@ -30,9 +30,7 @@ class Solver(PlaceFinder):
 
         self.precision = precision
 
-        self.__placeFinderGraph = cp.deepcopy(self.__graph)
-
-        super().__init__(self.__placeFinderGraph, shelf_size_x,
+        super().__init__(self.__graph, shelf_size_x,
                          shelf_size_y, precision, self.objectRadiusProximity)
 
     def __getSucessors(self, currentNode):
@@ -42,7 +40,7 @@ class Solver(PlaceFinder):
         """
 
         if isinstance(currentNode, Node):
-            freeSpaces = self.findPlace(currentNode.size)
+            freeSpaces = self.findPlace(currentNode)
 
             if freeSpaces:
                 for zone in freeSpaces:
@@ -51,6 +49,16 @@ class Solver(PlaceFinder):
 
                         currentNode.setChild(newSpace)
                         newSpace.setParent(currentNode)
+
+        elif isinstance(currentNode, RobotArm):
+            for node in self.__graph:
+                if node.name[:-1] == "RobotArm-Path-Point":
+                    new_node = cp.deepcopy(node)
+                    new_node.resetChild()
+
+                    currentNode.setChild(new_node)
+                    new_node.setParent(currentNode)
+
         else:
             for node in self.__graph:
                 if node.name is not currentNode.name:
@@ -60,7 +68,6 @@ class Solver(PlaceFinder):
 
                         currentNode.setChild(new_node)
                         new_node.setParent(currentNode)
-
         return currentNode.getChild()
 
     def defineObjectToMove(self, robotArm, algo_name, occurence_test=True):
@@ -107,9 +114,6 @@ class Solver(PlaceFinder):
 
             if state.isGoal():
                 return state, i
-
-            if isinstance(state, FreeZone):
-                state.moveParent()
 
             children = self.__getSucessors(state)
 
@@ -160,10 +164,7 @@ class Solver(PlaceFinder):
             starting_node (Node or RobotArm):
             ending_node (Node):
         """
-
-        sx, sy, dx, dy = 0, 0, 0, 0
-
-        x, y = starting_node.x, starting_node.y
+        x, y = int(starting_node.x), int(starting_node.y)
 
         if(x < ending_node.x):
             sx = 1
@@ -175,11 +176,11 @@ class Solver(PlaceFinder):
         else:
             sy = -1
 
-        dx = abs(x - ending_node.x)
-        dy = abs(y - ending_node.y)
+        dx = abs(x - int(ending_node.x))
+        dy = abs(y - int(ending_node.y))
         e = dx - dy
 
-        while(x != ending_node.x or y != ending_node.y):
+        while(x != int(ending_node.x) or y != int(ending_node.y)):
             e2 = e * 2
 
             if e2 > - dy:
@@ -190,11 +191,11 @@ class Solver(PlaceFinder):
                 e += dx
                 y += sy
 
-            if(x != ending_node.x or y != ending_node.y):
+            if(x != int(ending_node.x) or y != int(ending_node.y)):
                 node, distanceToClosestNode = self.__getDistanceToClosestObjectsFromPoint([
                     x, y, 0])
 
-                if node and node.name != "RobotArm-Path-Point":
+                if node:
                     if (node.name is not ending_node.name and node.name is not starting_node.name):
                         if distanceToClosestNode < self.objectRadiusProximity:
                             return True
@@ -202,7 +203,7 @@ class Solver(PlaceFinder):
         return False
 
     def __getDistanceToClosestObjectsFromPoint(self, point):
-        """This method permits to find the closest object to a given one. 
+        """This method permits to find the closest object to a given one.
 
         Args:
             point (Node)
@@ -211,12 +212,13 @@ class Solver(PlaceFinder):
             [Node, float]: closest_node, min_dist
         """
         closest_node = None
-        min_dist = 100000
+        min_dist = inf
 
         for obj in self.__graph:
-            if(min_dist > (obj.getDistanceTo(point) + obj.size/2)):
+            distance = obj.getDistanceTo(point) + obj.size/2
+            if(min_dist > distance):
                 closest_node = obj
-                min_dist = obj.getDistanceTo(point) + obj.size/2
+                min_dist = distance
 
         return closest_node, min_dist
 

@@ -16,7 +16,8 @@ class PlaceFinder():
 
         self.graph = graph
 
-    def findPlace(self, diameter_object):
+    def findPlace(self, current):
+        diameter_object = current.size
         notfind = False
         findplace = False
         box = [[0] * 2 for _ in range(4)]
@@ -79,7 +80,7 @@ class PlaceFinder():
         newList = []
         for i, point in enumerate(list_pos):
             newFreeZone = FreeZone(
-                "FreeZone" + str(i), [point[0], point[1], 0], diameter_object)
+                "FreeZone" + current.name + str(i), [point[0], point[1], 0], diameter_object)
             newList.append(newFreeZone)
 
         return newList
