@@ -1,12 +1,15 @@
-class RobotArm():
+from utils.Point3D import *
+
+
+class RobotArm(Point3D):
     def __init__(self, x, y, z=0, name=" "):
-        self.x, self.y, self.z = x, y, z
+        super().__init__([x, y, z])
 
         self.name = "RobotArm - " + name
 
         self.__child = []
         self.__parent = None
-        self.size = 100
+        self.size = 150
 
     def setChild(self, nodeChild):
         self.__child.append(nodeChild)

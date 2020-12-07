@@ -1,6 +1,6 @@
 from data.data import *
 from utils.Nodes import *
-from utils.solver import *
+from solver.solver import *
 
 import matplotlib.pyplot as plt
 
@@ -19,49 +19,26 @@ class shelf_object_solver():
 
         self.graph = []
 
-        self.getData(randomInit=randomENV, objectNumber=15)
+        self.getData(randomInit=randomENV, objectNumber=10)
         self.goal = self.__getGoal()
 
         self.solver = Solver(shelf_size_x, shelf_size_y,
                              precision, self.graph, self.goal)
 
-        # Warning may not be true
-        self.__grasper = RobotArm(0, shelf_size_y)
+        # The position asigned to the Robot arm correspond to the scanning pose
+        self.__grasper = RobotArm(shelf_size_x/2, shelf_size_y + 100)
 
         self.__verbose = verbose
 
     def __solve(self):
         start_execution_time = time.time()
 
-        nb_interval = 20
-        interval_dist = self.x_boundary / nb_interval
-
-        array_objectToMove = []
-
-        for i in range(nb_interval):
-            self.solver.resetNodesChild()
-            self.__grasper.x += interval_dist
-            objectToMove, iterations = self.solver.defineObjectToMove(
-                self.__grasper, "BFS", occurence_test=True)
-
-            if len(objectToMove) != 2:
-                array_objectToMove.append(
-                    [self.__grasper.x, len(objectToMove), objectToMove, iterations])
-
-                if array_objectToMove[-1][1] < array_objectToMove[0][1] and i > 0:
-                    array_objectToMove.pop(0)
-                elif i > 0:
-                    array_objectToMove.pop(-1)
-            else:
-                array_objectToMove = [[self.__grasper.x, len(
-                    objectToMove), objectToMove, iterations]]
-                break
-
-        self.__grasper.x = array_objectToMove[0][0]
+        objectToMove, iterations = self.solver.defineObjectToMove(
+            self.__grasper, "BFS", occurence_test=True)
 
         exec_time = time.time() - start_execution_time
 
-        return array_objectToMove[0][-2], array_objectToMove[0][-1], exec_time
+        return objectToMove, iterations, exec_time
 
     def __getGoal(self):
         for obj in self.graph:
@@ -73,11 +50,18 @@ class shelf_object_solver():
         """get data via rosservice
         """
 
+        # The following part permits to define along the shelf where the robot could pass
+        nb_interval = 10
+        interval_dist = self.x_boundary / nb_interval
+
+        for i in range(nb_interval+1):
+            self.graph.append(
+                Zone("RobotArm-Path-Point", [i * interval_dist, self.y_boundary, 0], size=0))
+
         if not randomInit:
             self.graph = self.dataParser.parseFile()
 
         else:
-
             x = randint(0, self.x_boundary)
             y = randint(0, self.y_boundary/4)
             objSize = randint(50, 100)  # Can be modified
@@ -108,11 +92,14 @@ class shelf_object_solver():
 
         for obj in objectsToMove:
             nb_objects_move += 1
-            print(obj.__str__())
 
-        print("Solve in ", iterations, "iterations")
-        print(nb_objects_move, "have to be moved to reach goal Object")
-        print("Exectution time : ", exec_time, " seconds")
+            if self.__verbose:
+                print(obj.__str__())
+
+        if self.__verbose:
+            print("Solve in ", iterations, "iterations")
+            print(nb_objects_move, "have to be moved to reach goal Object")
+            print("Exectution time : ", exec_time, " seconds")
 
         return objectsToMove
 
@@ -179,7 +166,7 @@ class shelf_object_solver():
 
 if __name__ == "__main__":
     shelfdObjectSolver = shelf_object_solver(
-        2000, 700, 1, randomENV=True, verbose=False)
+        2000, 700, 10, randomENV=True, verbose=True)
 
     solution = shelfdObjectSolver.sendData()
 
