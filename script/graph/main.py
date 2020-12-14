@@ -34,7 +34,7 @@ class shelf_object_solver():
         start_execution_time = time.time()
 
         objectToMove, iterations = self.solver.defineObjectToMove(
-            self.__grasper, "BFS", occurence_test=True)
+            self.__grasper, "A*", occurence_test=True)
 
         exec_time = time.time() - start_execution_time
 
