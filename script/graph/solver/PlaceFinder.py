@@ -1,5 +1,6 @@
 import math
 import copy as cp
+import solver
 
 from utils.FreeZone import *
 
@@ -8,10 +9,9 @@ class PlaceFinder():
     """The goal of this class is to create a list of the potentiel place to move an object with a given size
     """
 
-    def __init__(self, graph, shelf_size_x, shelf_size_y, precision, objectProximityRadius):
+    def __init__(self, graph, shelf_size_x, shelf_size_y, precision):
         self.shelf_size_x = shelf_size_x
         self.shelf_size_y = shelf_size_y
-        self.objectRadiusProximity = objectProximityRadius
         self.precision = precision
 
         self.graph = graph
