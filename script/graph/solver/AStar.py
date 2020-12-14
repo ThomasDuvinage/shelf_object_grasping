@@ -2,43 +2,66 @@ from math import inf
 
 
 class AStar():
-    def __init__(self):
-        pass
+    def __init__(self, startingNode, goalNode, solver):
+        self.__startingNode = startingNode
+        self.__goalNode = goalNode
+        self.__solver = solver
 
-    def solve(self, startingNode, goalNode):
+    def solve(self):
         closestList = []
         openList = []
-        openList.append(startingNode)
+        openList.append(self.__startingNode)
+
+        iteration = 0
 
         while openList:
-            state = self.getMinimumFunctionNode(openList)
-            closestList.append(state.name)
+            state = self.__getMinimumFunctionNode(openList)
 
             if state.isGoal():
-                return state
+                print(state)
+                return state, iteration
 
-            for child in state.getSucessors():
-                if child.name in closestList or self.checkChildInOpenList(openList, child):
-                    child.updateCostG(state)
-                    child.updateFunctionValue()
-                    child.setParent(state)
-                    openList.append(child)
+            iteration += 1
 
-    def getMinimumFunctionNode(self, nodeList):
+            for child in self.__solver.getSucessors(state):
+                child.upgateGcost(state)
+                child.computeHcost(self.__goalNode)
+                child.updateFunctionValue()
+
+                if not self.__checkChildInOpenList(openList, child):
+                    if not self.__checkChildInOpenList(openList, child):
+                        openList.append(child)
+                        child.setParent(state)
+
+            closestList.append(state)
+
+        return None, iteration
+
+    def __getMinimumFunctionNode(self, nodeList):
         minimum = inf
         best_node = None
+        index = 0
 
-        for node in nodeList:
+        for i, node in enumerate(nodeList):
             if node.getFunctionValue() < minimum:
                 best_node = node
+                index = i
                 minimum = node.getFunctionValue()
 
-        return best_node
+        return nodeList.pop(index)
 
-    def checkChildInOpenList(self, openList, child):
+    def __checkNodeInClosedList(self, closedList, child):
+        for node in closedList:
+            if child.name == node.name:
+                if child.getFunctionValue() > node.getFunctionValue():
+                    return True
+
+        return False
+
+    def __checkChildInOpenList(self, openList, child):
         for node in openList:
             if child.name == node.name:
-                if child.getFunctionValue() < node.getFunctionValue():
+                if child.getFunctionValue() > node.getFunctionValue():
                     return True
 
         return False
