@@ -7,11 +7,7 @@ from solver.PlaceFinder import *
 from utils.RobotArm import *
 from utils.Nodes import *
 from utils.FreeZone import *
-"""
-TODO :
-    - define mecanical constraints
-    - find a better way to generate the path
-"""
+from solver.AStar import *
 
 
 class Solver(PlaceFinder):
@@ -26,14 +22,17 @@ class Solver(PlaceFinder):
         self.__graph = graph
         self.goal = goal
 
-        self.objectRadiusProximity = 150  # defined depending on the arm's size
+        self.__shelf_size_x = shelf_size_x
+        self.shelf_size_y = shelf_size_y
+
+        self.__objectRadiusProximity = 150  # defined depending on the arm's size
 
         self.precision = precision
 
         super().__init__(self.__graph, shelf_size_x,
-                         shelf_size_y, precision, self.objectRadiusProximity)
+                         shelf_size_y, precision)
 
-    def __getSucessors(self, currentNode):
+    def getSucessors(self, currentNode):
         """ Cette methode permet de generer le graph en fonction des objets dans l'espace
 
         Un noeud ne peut avoir qu'un fils par contre il peut avoir plusieurs parents.
@@ -48,16 +47,14 @@ class Solver(PlaceFinder):
                         newSpace = cp.deepcopy(zone)
 
                         currentNode.setChild(newSpace)
-                        newSpace.setParent(currentNode)
 
-        elif isinstance(currentNode, RobotArm):
+        if isinstance(currentNode, RobotArm):
             for node in self.__graph:
                 if node.name[:-1] == "RobotArm-Path-Point":
                     new_node = cp.deepcopy(node)
                     new_node.resetChild()
 
                     currentNode.setChild(new_node)
-                    new_node.setParent(currentNode)
 
         else:
             for node in self.__graph:
@@ -67,7 +64,6 @@ class Solver(PlaceFinder):
                         new_node.resetChild()
 
                         currentNode.setChild(new_node)
-                        new_node.setParent(currentNode)
         return currentNode.getChild()
 
     def defineObjectToMove(self, robotArm, algo_name, occurence_test=True):
@@ -86,6 +82,10 @@ class Solver(PlaceFinder):
         elif algo_name == "DFS":
             solution, nb_iterations = self.depth_first_search(
                 robotArm, occurence_test=occurence_test)
+        elif algo_name == "A*":
+            AStarSolver = AStar(robotArm, self.goal, self)
+
+            solution, nb_iterations = AStarSolver.solve()
 
         if solution:
             print("Solver : Solution found")
@@ -115,10 +115,11 @@ class Solver(PlaceFinder):
             if state.isGoal():
                 return state, i
 
-            children = self.__getSucessors(state)
+            children = self.getSucessors(state)
 
             for child in children:
                 if not occurence_test or (child.name not in explored):
+                    child.setParent(state)
                     frontier.append(child)
                     if occurence_test:
                         explored.append(child.name)
@@ -142,10 +143,11 @@ class Solver(PlaceFinder):
             if state.isGoal():
                 return state, i
 
-            children = self.__getSucessors(state)
+            children = self.getSucessors(state)
 
             for child in children:
                 if not occurence_test or (child.name not in explored):
+                    child.setParent(state)
                     frontier.insert(0, child)
                     if occurence_test:
                         explored.append(child.name)
@@ -197,7 +199,7 @@ class Solver(PlaceFinder):
 
                 if node:
                     if (node.name is not ending_node.name and node.name is not starting_node.name):
-                        if distanceToClosestNode < self.objectRadiusProximity:
+                        if distanceToClosestNode < self.__objectRadiusProximity:
                             return True
 
         return False
@@ -226,3 +228,45 @@ class Solver(PlaceFinder):
         for node in self.__graph:
             node.resetChild()
             node.resetParent()
+
+    def newPoseObjectToMove(self, solutions):
+        freeSpaceAccessible = []
+        newPosAvailable = []
+        i = 2
+        while not solution[i].isGoal():
+            #newPosAvailable.append("Object1 pose possible"+str(i-1))
+            "trouver tous les espaces libre"
+            freeSpace = self.findPlace(solution[i])
+
+            "ne regarder que les espaces accessible"
+            for point in freeSpace:
+                self.__isCollide(solution[1], point)
+                freeSpaceAccessible.append(point)
+
+            "retirer l'objet qui nous interesse du graph"
+            for compt, objectToretire in enumerate(self.__graph):
+                if objectToretire.name == solution[i].name:
+                    tamponObj = objectToretire
+                    self.__graph.pop(compt)
+
+            "Tester si les valeurs conviennent pour deplacer l'objet"
+            for pointA in freeSpaceAccessible:
+                self.__graph.append(pointA)
+                if self.__isCollide(solution[1], solution[i+1]):
+                    if self.addValue(pointA, newPosAvailable):
+                        newPosAvailable.append(pointA)
+                self.__graph.pop()
+
+            self.__graph.append(tamponObj)
+
+            i += 1
+        for al in newPosAvailable:
+            solution.append(al)
+        return newPosAvailable
+
+    def addValue(self, pointA, posAvailable):
+        add = True
+        for point in posAvailable:
+            if point == pointA:
+                add = False
+        return add
