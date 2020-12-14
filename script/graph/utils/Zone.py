@@ -1,6 +1,7 @@
 from utils.Point3D import *
+import numpy as np
 
-from math import sqrt, pow
+from math import sqrt, pow, acos
 
 
 class Zone(Point3D):
@@ -13,6 +14,10 @@ class Zone(Point3D):
 
         self._child = []
         self._parent = None
+
+        self.gCost = 0
+        self.hCost = 0
+        self.functionValue = 0
 
     def resetChild(self):
         self._child = []
@@ -34,6 +39,50 @@ class Zone(Point3D):
 
     def getParent(self):
         return self._parent
+
+    def computeHcost(self, goal):
+        self.hCost = self.getDistanceToNode(goal)
+        return self.hCost
+
+    def computeVirtualGcost(self, parent):
+        print("parent = ", parent.gCost)
+        v = parent.gCost + self.getDistanceToNode(parent)
+        print(v)
+        return parent.gCost + self.getDistanceToNode(parent)
+
+    def upgateGcost(self, parent):
+        # here we can take in acount the mecanical constraints of the robot arm
+        # to do so, we can add to the distance the angle between the two nodes
+
+        self.gCost = parent.gCost + \
+            self.getDistanceToNode(parent) * 0.8  # distance
+
+        vectorPC = [self.x - parent.x, self.y - parent.y]
+        vectorPy = [0, 1 - parent.y]
+
+        unitVecPC = vectorPC / np.linalg.norm(vectorPC)
+        unitVecPy = vectorPy / np.linalg.norm(vectorPy)
+
+        dot_product = np.dot(unitVecPC, unitVecPy)
+
+        angle = np.arccos(dot_product) * 1.5
+
+        self.gCost += angle
+
+        return self.gCost
+
+    def isAtTheSamePositionAs(self, node):
+        if self.x == node.x:
+            if self.y == node.y:
+                return True
+        return False
+
+    def updateFunctionValue(self):
+        self.functionValue = self.hCost + self.gCost
+
+    def getFunctionValue(self):
+        self.functionValue = self.hCost + self.gCost
+        return self.functionValue
 
     def getDistanceTo(self, datapoint):
         return sqrt(pow((datapoint[0]-self.x), 2) + pow((datapoint[1]-self.y), 2) + pow((datapoint[2]-self.z), 2))
