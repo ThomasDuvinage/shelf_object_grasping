@@ -1,10 +1,10 @@
 [
     {
-        "name": "ObjectA",
+        "name": "ObjectGoal",
         "coordinate": [
             {
-                "x": 40,
-                "y": 10,
+                "x": 450,
+                "y": 50,
                 "z": 0
             }
         ],
@@ -15,7 +15,7 @@
         "name": "ObjectB",
         "coordinate": [
             {
-                "x": 10,
+                "x": 100,
                 "y": 40,
                 "z": 0
             }
@@ -27,8 +27,8 @@
         "name": "ObjectC",
         "coordinate": [
             {
-                "x": 15,
-                "y": 60,
+                "x": 300,
+                "y": 250,
                 "z": 0
             }
         ],
@@ -39,8 +39,8 @@
         "name": "ObjectD",
         "coordinate": [
             {
-                "x": 80,
-                "y": 30,
+                "x": 700,
+                "y": 150,
                 "z": 0
             }
         ],
@@ -51,8 +51,8 @@
         "name": "ObjectE",
         "coordinate": [
             {
-                "x": 60,
-                "y": 70,
+                "x": 500,
+                "y": 200,
                 "z": 0
             }
         ],
@@ -63,8 +63,20 @@
         "name": "ObjectF",
         "coordinate": [
             {
-                "x": 20,
-                "y": 20,
+                "x": 400,
+                "y": 170,
+                "z": 0
+            }
+        ],
+        "isGoal": false,
+        "size": 30
+    },
+    {
+        "name": "ObjectG",
+        "coordinate": [
+            {
+                "x": 150,
+                "y": 170,
                 "z": 0
             }
         ],

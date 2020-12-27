@@ -1,7 +1,5 @@
 from utils.Point3D import *
-import numpy as np
-
-from math import sqrt, pow, acos
+from math import inf
 
 
 class Zone(Point3D):
@@ -15,7 +13,9 @@ class Zone(Point3D):
         self._child = []
         self._parent = None
 
-        self.gCost = 0
+        self.gAngleCost = 0
+        self.gDistCost = 0
+        self.gObjectCost = 0
         self.hCost = 0
         self.functionValue = 0
 
@@ -45,31 +45,32 @@ class Zone(Point3D):
         return self.hCost
 
     def computeVirtualGcost(self, parent):
-        print("parent = ", parent.gCost)
-        v = parent.gCost + self.getDistanceToNode(parent)
-        print(v)
-        return parent.gCost + self.getDistanceToNode(parent)
+        d = parent.gDistCost + self.getDistanceToNode(parent)
+
+        a = self.computeAngle(parent)
+        a += parent.gAngleCost
+
+        o = parent.gObjectCost + 1000
+
+        return d + a + o
+
+    def getGCost(self):
+        return self.gDistCost + self.gAngleCost
 
     def upgateGcost(self, parent):
         # here we can take in acount the mecanical constraints of the robot arm
         # to do so, we can add to the distance the angle between the two nodes
 
-        self.gCost = parent.gCost + \
-            self.getDistanceToNode(parent) * 0.8  # distance
+        self.gDistCost = parent.gDistCost + \
+            self.getDistanceToNode(parent)  # distance
 
-        vectorPC = [self.x - parent.x, self.y - parent.y]
-        vectorPy = [0, 1 - parent.y]
+        angle = self.computeAngle(parent)
 
-        unitVecPC = vectorPC / np.linalg.norm(vectorPC)
-        unitVecPy = vectorPy / np.linalg.norm(vectorPy)
+        self.gAngleCost = parent.gAngleCost + angle
 
-        dot_product = np.dot(unitVecPC, unitVecPy)
+        self.gObjectCost = parent.gObjectCost + 1000
 
-        angle = np.arccos(dot_product) * 1.5
-
-        self.gCost += angle
-
-        return self.gCost
+        return self.gDistCost + self.gAngleCost + self.gObjectCost
 
     def isAtTheSamePositionAs(self, node):
         if self.x == node.x:
@@ -78,10 +79,10 @@ class Zone(Point3D):
         return False
 
     def updateFunctionValue(self):
-        self.functionValue = self.hCost + self.gCost
+        self.functionValue = self.hCost + self.gDistCost + self.gAngleCost
 
     def getFunctionValue(self):
-        self.functionValue = self.hCost + self.gCost
+        self.functionValue = self.hCost + self.gDistCost + self.gAngleCost
         return self.functionValue
 
     def getDistanceTo(self, datapoint):
@@ -89,6 +90,17 @@ class Zone(Point3D):
 
     def getDistanceToNode(self, node):
         return sqrt(pow((node.x-self.x), 2) + pow((node.y-self.y), 2) + pow((node.z-self.z), 2))
+
+    def getClosestZoneFromList(self, liste):
+        max_dist = inf
+        b_node = None
+
+        for element in liste:
+            if max_dist > self.getDistanceToNode(element):
+                max_dist = self.getDistanceToNode(element)
+                b_node = element
+
+        return b_node, max_dist
 
     def __str__(self):
         """Equivalent of toString(). it permits to display all the info concerning the node

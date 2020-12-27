@@ -19,7 +19,7 @@ class shelf_object_solver():
 
         self.graph = []
 
-        self.getData(randomInit=randomENV, objectNumber=20)
+        self.getData(randomInit=randomENV, objectNumber=10)
         self.goal = self.__getGoal()
 
         self.solver = Solver(shelf_size_x, shelf_size_y,
@@ -59,7 +59,7 @@ class shelf_object_solver():
                 Zone("RobotArm-Path-Point"+str(i), [i * interval_dist, self.y_boundary, 0], size=0))
 
         if not randomInit:
-            self.graph = self.dataParser.parseFile()
+            self.graph += self.dataParser.parseFile()
 
         else:
             x = randint(0, self.x_boundary)
@@ -155,9 +155,9 @@ class shelf_object_solver():
                           solution[i+1].y - solution[i].y, head_width=0.1, head_length=1, fc='b', ec='b')
 
         ax1.scatter(x_graph, y_graph, color="k",
-                    s=node.size*2, label="Objects")
+                    s=node.size*3, label="Objects")
         ax2.scatter(x_solution, y_solution, color="k",
-                    s=node.size*2)
+                    s=node.size*3)
 
         fig.legend()
 
@@ -166,7 +166,7 @@ class shelf_object_solver():
 
 if __name__ == "__main__":
     shelfdObjectSolver = shelf_object_solver(
-        2000, 700, 200, randomENV=True, verbose=True)
+        800, 280, 50, randomENV=False, verbose=True)
 
     solution = shelfdObjectSolver.sendData()
 

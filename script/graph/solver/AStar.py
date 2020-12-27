@@ -1,4 +1,6 @@
 from math import inf
+from utils.Nodes import *
+from utils.RobotArm import *
 
 
 class AStar():
@@ -18,7 +20,6 @@ class AStar():
             state = self.__getMinimumFunctionNode(openList)
 
             if state.isGoal():
-                print(state)
                 return state, iteration
 
             iteration += 1
@@ -29,7 +30,7 @@ class AStar():
                 child.updateFunctionValue()
 
                 if not self.__checkChildInOpenList(openList, child):
-                    if not self.__checkChildInOpenList(openList, child):
+                    if not self.__checkNodeInClosedList(closestList, child):
                         openList.append(child)
                         child.setParent(state)
 

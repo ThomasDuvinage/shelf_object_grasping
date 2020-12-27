@@ -20,6 +20,9 @@ class Node(Zone):
 
         self.__isGoal = isGoal
 
+        # Freezone assign to the Node
+        self.freeZone = None
+
     def setGoal(self):
         self.__isGoal = True
 
@@ -44,5 +47,10 @@ class Node(Zone):
             rep += "    parent: " + self._parent.name + "\n"
         else:
             rep += "    parent: " + str(self._parent) + "\n"
+
+        if(self.freeZone):
+            rep += "    freeZone: " + self.freeZone.name + "\n"
+        else:
+            rep += "    freeZone: " + str(self.freeZone) + "\n"
 
         return rep

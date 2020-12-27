@@ -38,16 +38,6 @@ class Solver(PlaceFinder):
         Un noeud ne peut avoir qu'un fils par contre il peut avoir plusieurs parents.
         """
 
-        if isinstance(currentNode, Node):
-            freeSpaces = self.findPlace(currentNode)
-
-            if freeSpaces:
-                for zone in freeSpaces:
-                    if not self.__isCollide(currentNode, zone):
-                        newSpace = cp.deepcopy(zone)
-
-                        currentNode.setChild(newSpace)
-
         if isinstance(currentNode, RobotArm):
             for node in self.__graph:
                 if node.name[:-1] == "RobotArm-Path-Point":
@@ -90,45 +80,72 @@ class Solver(PlaceFinder):
         if solution:
             print("Solver : Solution found")
 
-        objectsToMove.append(solution)
-        parent = solution.getParent()
+            objectsToMove.append(solution)
+            parent = solution.getParent()
 
-        while parent:
-            objectsToMove.append(parent)
+            while parent:
+                objectsToMove.append(parent)
 
-            parent = parent.getParent()
+                parent = parent.getParent()
 
-        objectsToMove.reverse()
+            objectsToMove.reverse()
+
+            self.newPoseObjectToMove(objectsToMove)
+        else:
+            print("Solver : No Solution found")
 
         return objectsToMove, nb_iterations
 
     def breath_first_search(self, robotArm, occurence_test=True):
-        frontier = list()
-        explored = []
-        frontier.append(robotArm)
+        """This function represents the BFS algorithm 
 
-        i = 0
+        Args:
+            robotArm (RobotArm): inital pose of the robot
+            occurence_test (bool, optional): Permits to activate or not the occurence test. Defaults to True.
 
-        while frontier:
+        Returns:
+            [tuple]: final_state,iterations
+        """
+        frontier = list()  # open list
+        explored = []  # closed list
+        frontier.append(robotArm)  # add the first node
+
+        i = 0  # iterations counter
+
+        while frontier:  # while frontier isn't empty
+            # pop the first elemeent of the frontier list
             state = frontier.pop(0)
 
-            if state.isGoal():
-                return state, i
+            if state.isGoal():  # if current state is goal then stop
+                return state, i  # return state ans iterations counter
 
-            children = self.getSucessors(state)
+            children = self.getSucessors(state)  # else generate successors
 
-            for child in children:
+            for child in children:  # for every successors
                 if not occurence_test or (child.name not in explored):
-                    child.setParent(state)
-                    frontier.append(child)
-                    if occurence_test:
+                    child.setParent(state)  # for successor set parent
+                    frontier.append(child)  # add successor to frontier list
+                    if occurence_test:  # if occurence test then
+                        # add successor to explored list
                         explored.append(child.name)
 
-            i += 1
+            i += 1  # increment interation counter
 
-        return None
+        return None  # if no solution is found the result None
 
     def depth_first_search(self, robotArm, occurence_test=True):
+        """This function represents the DFS algorithm
+            The main difference with the BFS method appears in the list gestion. 
+            In BFS child are added at the end of the frontier list and are poped with the index 0.
+            In contrary DSF pop the last element of the list and add child at the first position in the frontier list. 
+
+        Args:
+            robotArm (RobotArm): inital pose of the robot
+            occurence_test (bool, optional): Permits to activate or not the occurence test. Defaults to True.
+
+        Returns:
+            [tuple]: final_state,iterations
+        """
         frontier = list()
         explored = []
         frontier.append(robotArm)
@@ -136,9 +153,7 @@ class Solver(PlaceFinder):
         i = 0
 
         while frontier:
-            state = frontier.pop()
-
-            explored.append(state)
+            state = frontier.pop(0)  # pop first element of the frontier list
 
             if state.isGoal():
                 return state, i
@@ -148,11 +163,12 @@ class Solver(PlaceFinder):
             for child in children:
                 if not occurence_test or (child.name not in explored):
                     child.setParent(state)
+                    # add child at the first position in frontier list
                     frontier.insert(0, child)
                     if occurence_test:
                         explored.append(child.name)
 
-                i += 1
+            i += 1
 
         return None
 
@@ -168,8 +184,9 @@ class Solver(PlaceFinder):
         """
         x, y = int(starting_node.x), int(starting_node.y)
 
+        # Line direction definition
         if(x < ending_node.x):
-            sx = 1
+            sx = 1  # incrementation
         else:
             sx = -1
 
@@ -178,13 +195,17 @@ class Solver(PlaceFinder):
         else:
             sy = -1
 
+        # Define distance in x and y
         dx = abs(x - int(ending_node.x))
         dy = abs(y - int(ending_node.y))
+        # Define error value
         e = dx - dy
 
+        # while the computed point isn't the final point iterate
         while(x != int(ending_node.x) or y != int(ending_node.y)):
             e2 = e * 2
 
+            # compute the next pixel to visit based on the current position and error
             if e2 > - dy:
                 e -= dy
                 x += sx
@@ -194,14 +215,17 @@ class Solver(PlaceFinder):
                 y += sy
 
             if(x != int(ending_node.x) or y != int(ending_node.y)):
+                # get the closest node from actual virtual line point
                 node, distanceToClosestNode = self.__getDistanceToClosestObjectsFromPoint([
                     x, y, 0])
 
+                # the detected node is not corresponding to the starting or ending node and the computed distance is under a given radius then there is a colision so return True
                 if node:
                     if (node.name is not ending_node.name and node.name is not starting_node.name):
                         if distanceToClosestNode < self.__objectRadiusProximity:
                             return True
 
+        # Otherwise return False
         return False
 
     def __getDistanceToClosestObjectsFromPoint(self, point):
@@ -224,49 +248,45 @@ class Solver(PlaceFinder):
 
         return closest_node, min_dist
 
-    def resetNodesChild(self):
-        for node in self.__graph:
-            node.resetChild()
-            node.resetParent()
-
-    def newPoseObjectToMove(self, solutions):
+    def newPoseObjectToMove(self, solution):
         freeSpaceAccessible = []
         newPosAvailable = []
+
         i = 2
-        while not solution[i].isGoal():
-            #newPosAvailable.append("Object1 pose possible"+str(i-1))
+
+        while solution[i].name != self.goal.name:
+
             "trouver tous les espaces libre"
             freeSpace = self.findPlace(solution[i])
 
             "ne regarder que les espaces accessible"
-            for point in freeSpace:
-                self.__isCollide(solution[1], point)
-                freeSpaceAccessible.append(point)
-
+            for point in freeSpace :
+                if self.__isCollide(solution[1], point)==False :
+                    freeSpaceAccessible.append(point)
+            
             "retirer l'objet qui nous interesse du graph"
-            for compt, objectToretire in enumerate(self.__graph):
-                if objectToretire.name == solution[i].name:
+            for compt , objectToretire  in enumerate(self.__graph) :
+                if objectToretire.name == solution[i].name :
                     tamponObj = objectToretire
-                    self.__graph.pop(compt)
+                    jeter = self.__graph.pop(compt)
 
             "Tester si les valeurs conviennent pour deplacer l'objet"
-            for pointA in freeSpaceAccessible:
+            for pointA in freeSpaceAccessible :
                 self.__graph.append(pointA)
-                if self.__isCollide(solution[1], solution[i+1]):
-                    if self.addValue(pointA, newPosAvailable):
+                if self.__isCollide(solution[1], solution[i+1])==False :
+                    if self.addValue(pointA, newPosAvailable) :
                         newPosAvailable.append(pointA)
                 self.__graph.pop()
 
             self.__graph.append(tamponObj)
 
+            solution[i].freeZone , _ = solution[i].getClosestZoneFromList(newPosAvailable)
+
+            newPosAvailable = []
             i += 1
-        for al in newPosAvailable:
-            solution.append(al)
-        return newPosAvailable
+
 
     def addValue(self, pointA, posAvailable):
-        add = True
-        for point in posAvailable:
-            if point == pointA:
-                add = False
-        return add
+        if posAvailable.count(pointA) > 0:
+            return False
+        return True
