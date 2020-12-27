@@ -172,7 +172,7 @@ class Solver(PlaceFinder):
 
         return None
 
-    def __isCollide(self, starting_node, ending_node):
+    def __isCollide(self, starting_node, ending_node, ignorePathPoint = False):
         """ This method is based on the Bresenham algorithm
 
             This algorithm is well known for drawing lines between two points in a grid.
@@ -221,9 +221,15 @@ class Solver(PlaceFinder):
 
                 # the detected node is not corresponding to the starting or ending node and the computed distance is under a given radius then there is a colision so return True
                 if node:
-                    if (node.name is not ending_node.name and node.name is not starting_node.name):
-                        if distanceToClosestNode < self.__objectRadiusProximity:
-                            return True
+                    if ignorePathPoint and not isinstance(node, FreeZone):
+                        if (node.name is not ending_node.name and node.name is not starting_node.name):
+                            if distanceToClosestNode < self.__objectRadiusProximity:
+                                return True
+
+                    elif not ignorePathPoint:
+                        if (node.name is not ending_node.name and node.name is not starting_node.name):
+                            if distanceToClosestNode < self.__objectRadiusProximity:
+                                return True
 
         # Otherwise return False
         return False
@@ -255,15 +261,14 @@ class Solver(PlaceFinder):
         i = 2
 
         while solution[i].name != self.goal.name:
-
             "trouver tous les espaces libre"
             freeSpace = self.findPlace(solution[i])
 
             "ne regarder que les espaces accessible"
             for point in freeSpace :
-                if self.__isCollide(solution[1], point)==False :
+                if not self.__isCollide(solution[1], point,ignorePathPoint=True):
                     freeSpaceAccessible.append(point)
-            
+
             "retirer l'objet qui nous interesse du graph"
             for compt , objectToretire  in enumerate(self.__graph) :
                 if objectToretire.name == solution[i].name :
@@ -273,20 +278,23 @@ class Solver(PlaceFinder):
             "Tester si les valeurs conviennent pour deplacer l'objet"
             for pointA in freeSpaceAccessible :
                 self.__graph.append(pointA)
-                if self.__isCollide(solution[1], solution[i+1])==False :
+                if not self.__isCollide(solution[1], solution[i+1],ignorePathPoint=True):
                     if self.addValue(pointA, newPosAvailable) :
                         newPosAvailable.append(pointA)
-                self.__graph.pop()
+                # self.__graph.pop()
+
+            print(newPosAvailable)
 
             self.__graph.append(tamponObj)
-
+            
+            "Definition de la zone de depot la plus proche de l'objet"
             solution[i].freeZone , _ = solution[i].getClosestZoneFromList(newPosAvailable)
 
             newPosAvailable = []
             i += 1
 
-
     def addValue(self, pointA, posAvailable):
-        if posAvailable.count(pointA) > 0:
-            return False
+        for point in posAvailable :
+           if point == pointA :
+               return False
         return True

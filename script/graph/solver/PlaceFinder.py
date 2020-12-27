@@ -91,7 +91,7 @@ class PlaceFinder():
             if (point.x < box[3][0] and point.x > box[0][0] and point.y < box[1][1] and point.y > box[0][1]):
                 empty_area = False
 
-            for j in range(1, int(point.size/10)):
+            for j in range(1, int(point.size/20)):
                 for i in range(0, 10):
                     angle = math.radians(i*36)
                     rayon = j * 10
