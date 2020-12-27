@@ -172,7 +172,7 @@ class Solver(PlaceFinder):
 
         return None
 
-    def __isCollide(self, starting_node, ending_node, ignorePathPoint = False):
+    def __isCollide(self, starting_node, ending_node):
         """ This method is based on the Bresenham algorithm
 
             This algorithm is well known for drawing lines between two points in a grid.
@@ -221,13 +221,8 @@ class Solver(PlaceFinder):
 
                 # the detected node is not corresponding to the starting or ending node and the computed distance is under a given radius then there is a colision so return True
                 if node:
-                    if ignorePathPoint and not isinstance(node, FreeZone):
-                        if (node.name is not ending_node.name and node.name is not starting_node.name):
-                            if distanceToClosestNode < self.__objectRadiusProximity:
-                                return True
-
-                    elif not ignorePathPoint:
-                        if (node.name is not ending_node.name and node.name is not starting_node.name):
+                    if node.name[0] != "R":
+                        if(node.name is not ending_node.name and node.name is not starting_node.name):
                             if distanceToClosestNode < self.__objectRadiusProximity:
                                 return True
 
@@ -266,7 +261,7 @@ class Solver(PlaceFinder):
 
             "ne regarder que les espaces accessible"
             for point in freeSpace :
-                if not self.__isCollide(solution[1], point,ignorePathPoint=True):
+                if not self.__isCollide(solution[1], point):
                     freeSpaceAccessible.append(point)
 
             "retirer l'objet qui nous interesse du graph"
@@ -278,13 +273,11 @@ class Solver(PlaceFinder):
             "Tester si les valeurs conviennent pour deplacer l'objet"
             for pointA in freeSpaceAccessible :
                 self.__graph.append(pointA)
-                if not self.__isCollide(solution[1], solution[i+1],ignorePathPoint=True):
-                    if self.addValue(pointA, newPosAvailable) :
+                if not self.__isCollide(solution[1], solution[i]):
+                    if self.addValue(pointA, newPosAvailable):
                         newPosAvailable.append(pointA)
-                # self.__graph.pop()
-
-            print(newPosAvailable)
-
+                self.__graph.pop()
+            
             self.__graph.append(tamponObj)
             
             "Definition de la zone de depot la plus proche de l'objet"

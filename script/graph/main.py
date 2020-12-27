@@ -150,6 +150,12 @@ class shelf_object_solver():
                 y_solution.append(node.y)
                 s_solution.append(node.size)
 
+                if isinstance(node,Node) and  node.freeZone:
+                    x_solution.append(node.freeZone.x)
+                    y_solution.append(node.freeZone.y)
+                    s_solution.append(node.freeZone.size)
+
+
             for i in range(len(solution) - 1):
                 ax2.arrow(solution[i].x, solution[i].y, solution[i+1].x - solution[i].x,
                           solution[i+1].y - solution[i].y, head_width=0.1, head_length=1, fc='b', ec='b')
