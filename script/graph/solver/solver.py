@@ -221,10 +221,9 @@ class Solver(PlaceFinder):
 
                 # the detected node is not corresponding to the starting or ending node and the computed distance is under a given radius then there is a colision so return True
                 if node:
-                    if node.name[0] != "R":
-                        if(node.name is not ending_node.name and node.name is not starting_node.name):
-                            if distanceToClosestNode < self.__objectRadiusProximity:
-                                return True
+                    if(node.name is not ending_node.name and node.name is not starting_node.name):
+                        if distanceToClosestNode < self.__objectRadiusProximity:
+                            return True
 
         # Otherwise return False
         return False
