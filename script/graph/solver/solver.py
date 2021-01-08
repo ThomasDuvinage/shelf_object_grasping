@@ -25,7 +25,7 @@ class Solver(PlaceFinder):
         self.__shelf_size_x = shelf_size_x
         self.shelf_size_y = shelf_size_y
 
-        self.__objectRadiusProximity = 150  # defined depending on the arm's size
+        self.__objectRadiusProximity = 75  # defined depending on the arm's size
 
         self.precision = precision
 
@@ -258,10 +258,6 @@ class Solver(PlaceFinder):
             "trouver tous les espaces libre"
             freeSpace = self.findPlace(solution[i])
 
-            "ne regarder que les espaces accessible"
-            for point in freeSpace :
-                if not self.__isCollide(solution[1], point):
-                    freeSpaceAccessible.append(point)
 
             "retirer l'objet qui nous interesse du graph"
             for compt , objectToretire  in enumerate(self.__graph) :
@@ -269,13 +265,23 @@ class Solver(PlaceFinder):
                     tamponObj = objectToretire
                     jeter = self.__graph.pop(compt)
 
+            "ne garder que les espaces accessible"
+            for point in freeSpace :
+                if self.__isCollide(solution[1], point)==False :
+                    freeSpaceAccessible.append(point)
+                    #solution.append(point)
+
+
+
             "Tester si les valeurs conviennent pour deplacer l'objet"
             for pointA in freeSpaceAccessible :
                 self.__graph.append(pointA)
-                if not self.__isCollide(solution[1], solution[i]):
+                if self.__isCollide(solution[1], solution[i+1])==False :
                     if self.addValue(pointA, newPosAvailable):
                         newPosAvailable.append(pointA)
-                self.__graph.pop()
+                        
+                else :
+                    self.__graph.pop()
             
             self.__graph.append(tamponObj)
             

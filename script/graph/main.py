@@ -172,7 +172,7 @@ class shelf_object_solver():
 
 if __name__ == "__main__":
     shelfdObjectSolver = shelf_object_solver(
-        800, 280, 20, randomENV=False, verbose=True)
+        800, 280, 20, randomENV=True, verbose=True)
 
     solution = shelfdObjectSolver.sendData()
 
